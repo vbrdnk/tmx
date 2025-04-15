@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"os"
 
@@ -29,7 +28,7 @@ func ParseConfig() (*Config, error) {
 
 	configPath := homeDir + "/.config/tmx.toml"
 	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
-		fmt.Println("Config file not found.")
+		log.Println("Config file not found.")
 		return config, err
 	}
 
