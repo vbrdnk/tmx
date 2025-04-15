@@ -24,11 +24,16 @@ func ManageSession(dir string) {
 	attachToSession(sessionName)
 }
 
+func isAttached() bool {
+	_, tmuxRunning := os.LookupEnv("TMUX")
+	return tmuxRunning
+}
+
 // attachToSession attaches to an existing tmux session
 func attachToSession(sessionName string) {
 	var tc *TmuxCommand
 
-	_, tmuxRunning := os.LookupEnv("TMUX")
+	tmuxRunning := isAttached()
 	if !tmuxRunning {
 		tc = NewTmuxCommand("attach-session", "-t", sessionName)
 	} else {
