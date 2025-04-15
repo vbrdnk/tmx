@@ -14,17 +14,16 @@ import (
 )
 
 func Run() {
-	fmt.Println("Hello from tmx!")
 	app := &cli.Command{
 		Name:        "tmux sessionizer",
 		Description: "Tmux session manager",
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			selectedDir, err := selectWorkDir(cmd)
+			workDir, err := selectWorkDir(cmd)
 			if err != nil {
 				return nil
 			}
 
-			tmux.ManageSession(selectedDir)
+			tmux.ManageSession(workDir)
 			return nil
 		},
 		Commands: []*cli.Command{},
@@ -40,7 +39,7 @@ func selectWorkDir(cmd *cli.Command) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("Searching in:", searchDir)
+
 	if cmd.Args().Present() {
 		searchDir = cmd.Args().First()
 	}
