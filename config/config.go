@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -9,36 +10,39 @@ import (
 )
 
 type Config struct {
-	Workspace WorkspaceConfig `toml:"workspace"`
+	Workspace []WorkspaceConfig `toml:"workspace"`
 }
 
 type WorkspaceConfig struct {
-	Panes string `toml:"panes"`
+	Directory string   `toml:"directory"`
+	Name      string   `toml:"name"`
+	Windows   []string `toml:"windows"`
 }
 
-func ParseConfig() {
-	var config Config
+func ParseConfig() (*Config, error) {
+	config := &Config{}
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return
+		return config, err
 	}
 
-	file, err := os.Open(homeDir + "/.config/tmx.toml")
-	if err != nil {
-		log.Fatal(err)
+	configPath := homeDir + "/.config/tmx.toml"
+	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
+		fmt.Println("Config file not found.")
+		return config, err
 	}
 
-	defer file.Close()
-
-	content, err := os.ReadFile(file.Name())
+	content, err := os.ReadFile(configPath)
 	if err != nil {
 		log.Fatal(err)
+		return config, err
 	}
 
 	if _, err := toml.Decode(string(content), &config); err != nil {
 		log.Fatalf("Error reading config file: %v", err)
+		return config, err
 	}
 
-	fmt.Println("Config: ", config.Workspace.Panes)
+	return config, nil
 }
