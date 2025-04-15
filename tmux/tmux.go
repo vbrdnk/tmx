@@ -21,7 +21,7 @@ func ManageSession(dir string) {
 		newSession(sessionName, dir, cfg)
 	}
 
-	attachToSession(sessionName)
+	AttachToSession(sessionName)
 }
 
 func isAttached() bool {
@@ -30,7 +30,7 @@ func isAttached() bool {
 }
 
 // attachToSession attaches to an existing tmux session
-func attachToSession(sessionName string) {
+func AttachToSession(sessionName string) {
 	var tc *TmuxCommand
 
 	tmuxRunning := isAttached()
