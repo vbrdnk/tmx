@@ -2,16 +2,20 @@ package tmux
 
 import (
 	"fmt"
+	"log"
 	"os"
-	"strings"
+	"path/filepath"
 	"tmx/config"
 
 	"github.com/fatih/color"
 )
 
-// ManageSession creates a new session if it doesn't exist and then attaches to it
-func ManageSession(dir string) {
-	cfg, _ := config.ParseConfig()
+// ResolveSession creates a new session if it doesn't exist and then attaches to it
+func ResolveSession(dir string) {
+	cfg, err := config.ParseConfig()
+	if err != nil {
+		log.Printf("Error reading config file: %v", err)
+	}
 
 	// Determine session name
 	sessionName := determineSessionName(dir, cfg)
@@ -43,6 +47,15 @@ func AttachToSession(sessionName string) {
 	err := tc.ExecuteWithIO()
 	if err != nil {
 		color.Red(fmt.Sprintf("Error attaching to %s tmux session: %v\n", sessionName, err))
+	}
+}
+
+func KillSession(sessionName string) {
+	tc := NewTmuxCommand("kill-session", "-t", sessionName)
+
+	err := tc.ExecuteWithIO()
+	if err != nil {
+		color.Red(fmt.Sprintf("Error killing %s tmux session: %v\n", sessionName, err))
 	}
 }
 
@@ -83,7 +96,7 @@ func createSessionCommands(sessionName string, dir string, cfg *config.Config) [
 
 	// Try to find a matching workspace
 	for _, ws := range cfg.Workspace {
-		if strings.Contains(dir, ws.Directory) {
+		if filepath.Base(dir) == filepath.Base(ws.Directory) {
 			sessionName = createSessionName(ws.Name)
 
 			// Create first window with new-session

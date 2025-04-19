@@ -20,12 +20,17 @@ func Run() {
 				Usage:   "list currently active tmux sessions",
 				Action:  ListSessionsAction,
 			},
-
 			{
 				Name:    "connect",
 				Aliases: []string{"c", "conn"},
 				Usage:   "connect to a tmux session",
 				Action:  AttachToSessionAction,
+			},
+			{
+				Name:    "kill",
+				Aliases: []string{"k"},
+				Usage:   "kill tmux session",
+				Action:  KillSessionAction,
 			},
 		},
 	}

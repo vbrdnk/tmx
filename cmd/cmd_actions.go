@@ -18,20 +18,19 @@ func DefaultAction(_ctx context.Context, cmd *cli.Command) error {
 		return nil
 	}
 
-	tmux.ManageSession(workDir)
+	tmux.ResolveSession(workDir)
 	return nil
 }
 
 func ListSessionsAction(_ctx context.Context, _cmd *cli.Command) error {
-	listSessionsCmd := exec.Command("tmux", "list-sessions")
-	listSessionsCmd.Stdout = os.Stdout
-	listSessionsCmd.Run()
-	return nil
+	cmd := tmux.NewTmuxCommand("list-sessions")
+	return cmd.ExecuteWithIO()
 }
 
 func AttachToSessionAction(_ctx context.Context, _cmd *cli.Command) error {
-	session, err := getActiveSessionName()
+	session, err := selectFromActiveSessions()
 	if err != nil {
+		log.Println("Error getting active session name:", err)
 		return nil
 	}
 
@@ -39,14 +38,25 @@ func AttachToSessionAction(_ctx context.Context, _cmd *cli.Command) error {
 	return nil
 }
 
-func getActiveSessionName() (string, error) {
-	listSessionsCmd := exec.Command("tmux", "list-sessions")
-	listSessionsCmdOutput, err := listSessionsCmd.Output()
+func KillSessionAction(_ctx context.Context, _cmd *cli.Command) error {
+	session, err := selectFromActiveSessions()
+	if err != nil {
+		log.Println("Error selecting active session:", err)
+		return nil
+	}
+
+	tmux.KillSession(session)
+	return nil
+}
+
+func selectFromActiveSessions() (string, error) {
+	cmd := exec.Command("tmux", "list-sessions")
+	cmdOutput, err := cmd.Output()
 	if err != nil {
 		return "", err
 	}
 
-	fullSessionName, err := fzf.RunFzf(listSessionsCmdOutput)
+	fullSessionName, err := fzf.RunFzf(cmdOutput)
 	if err != nil {
 		return "", err
 	}
