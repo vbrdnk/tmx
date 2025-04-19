@@ -2,10 +2,11 @@ package fzf
 
 import (
 	"bytes"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 func RunFzf(input []byte) (string, error) {
@@ -15,7 +16,7 @@ func RunFzf(input []byte) (string, error) {
 	// Create the stdin pipe for feeding data to fzf
 	fzfStdin, err := fzfCmd.StdinPipe()
 	if err != nil {
-		log.Println("Error creating stdin pipe:", err)
+		color.Red("Error creating stdin pipe: %v", err)
 		return "", err
 	}
 
@@ -30,14 +31,14 @@ func RunFzf(input []byte) (string, error) {
 	// Start the fzf command
 	err = fzfCmd.Start()
 	if err != nil {
-		log.Println("Error starting fzf:", err)
+		color.Red("Error starting fzf: %v", err)
 		return "", err
 	}
 
 	// Write the find output to fzf's stdin
 	_, err = fzfStdin.Write(input)
 	if err != nil {
-		log.Println("Error writing to fzf stdin:", err)
+		color.Red("Error writing to fzf stdin: %v", err)
 		return "", err
 	}
 	fzfStdin.Close()
@@ -47,7 +48,7 @@ func RunFzf(input []byte) (string, error) {
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			if exitErr.ExitCode() == 1 || exitErr.ExitCode() == 130 {
-				log.Println("Nothing selected, exiting.")
+				color.Yellow("Nothing selected, exiting.")
 				os.Exit(0)
 			}
 		}
@@ -59,7 +60,7 @@ func RunFzf(input []byte) (string, error) {
 	selection := strings.TrimSpace(outputBuf.String())
 
 	if selection == "" {
-		log.Println("Nothing selected, exiting.")
+		color.Yellow("Nothing selected, exiting.")
 		os.Exit(0)
 	}
 

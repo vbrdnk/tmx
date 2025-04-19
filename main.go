@@ -1,6 +1,6 @@
 package main
 
-import "tmx/cmd"
+import "github.com/vbrdnk/tmx/cmd"
 
 func main() {
 	cmd.Run()

@@ -5,7 +5,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"tmx/config"
+
+	"github.com/vbrdnk/tmx/config"
 
 	"github.com/fatih/color"
 )
@@ -67,7 +68,7 @@ func sessionExists(sessionName string) bool {
 
 // NewSession creates a new tmux session with the given name in the specified directory
 func newSession(sessionName string, dir string, cfg *config.Config) {
-	color.Green(fmt.Sprintf("Create new session: %s in directory: %s\n", sessionName, dir))
+	color.Green(fmt.Sprintf("Creating new session: %s in directory: %s\n", sessionName, dir))
 
 	var commands []*TmuxCommand
 

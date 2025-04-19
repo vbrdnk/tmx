@@ -3,7 +3,8 @@ package tmux
 import (
 	"path/filepath"
 	"strings"
-	"tmx/config"
+
+	"github.com/vbrdnk/tmx/config"
 )
 
 // createSessionName creates a valid tmux session name from a directory name

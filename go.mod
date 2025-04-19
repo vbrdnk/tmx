@@ -1,4 +1,4 @@
-module tmx
+module github.com/vbrdnk/tmx
 
 go 1.24.1
 
