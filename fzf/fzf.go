@@ -2,6 +2,7 @@ package fzf
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -64,5 +65,6 @@ func RunFzf(input []byte) (string, error) {
 		os.Exit(0)
 	}
 
+	fmt.Println("You selected:", selection)
 	return selection, nil
 }
