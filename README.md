@@ -49,7 +49,7 @@ windows = ["code", "build", "logs"]
 
 ### Configuration Options
 
-- `directory`: The directory path that will trigger this workspace configuration. The app will check if full path of directory selected from fzf contains this path.
+- `directory`: The directory path that will trigger this workspace configuration. The app uses base path comparison to check it against the directory selected with fzf.
 - `name`: A friendly name for the tmux session
 - `windows`: A list of window names to create in the session
 
@@ -75,6 +75,12 @@ The application will:
 4. Attach to the session
 
 If no configuration matches the selected directory, it will create a session named after the directory.
+
+### Subcommands
+
+- `connect`
+- `list`
+- `kill`
 
 ### Prerequisites
 
