@@ -29,7 +29,7 @@ func determineSessionName(dir string, cfg *config.Config) string {
 
 	// Try to find a matching workspace
 	for _, ws := range cfg.Workspace {
-		if strings.Contains(dir, ws.Directory) {
+		if filepath.Base(dir) == filepath.Base(ws.Directory) {
 			return createSessionName(ws.Name)
 		}
 	}

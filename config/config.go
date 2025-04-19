@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"log"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -28,18 +27,15 @@ func ParseConfig() (*Config, error) {
 
 	configPath := homeDir + "/.config/tmx.toml"
 	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
-		log.Println("Config file not found.")
 		return config, err
 	}
 
 	content, err := os.ReadFile(configPath)
 	if err != nil {
-		log.Fatal(err)
 		return config, err
 	}
 
 	if _, err := toml.Decode(string(content), &config); err != nil {
-		log.Fatalf("Error reading config file: %v", err)
 		return config, err
 	}
 
