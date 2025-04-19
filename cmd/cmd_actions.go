@@ -6,8 +6,9 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"tmx/fzf"
-	"tmx/tmux"
+
+	"github.com/vbrdnk/tmx/fzf"
+	"github.com/vbrdnk/tmx/tmux"
 
 	"github.com/urfave/cli/v3"
 )
