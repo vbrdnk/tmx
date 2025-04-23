@@ -6,13 +6,27 @@ import (
 	"os"
 
 	"github.com/urfave/cli/v3"
+	utils "github.com/vbrdnk/tmx/internal/utils"
+	config "github.com/vbrdnk/tmx/pkg/config"
 )
 
 func Run() {
+	config, err := config.ParseConfig()
+	if err != nil {
+		log.Printf("Error reading config file: %v", err)
+	}
+
 	app := &cli.Command{
 		Name:        "tmux sessionizer",
 		Description: "Tmux session manager",
-		Action:      DefaultAction,
+		Action: func(_ctx context.Context, cmd *cli.Command) error {
+			targetDirPath, err := utils.GetWorkingDirPath(cmd)
+			if err != nil || targetDirPath == "" {
+				log.Fatal(err)
+			}
+
+			return DefaultAction(targetDirPath, config)
+		},
 		Commands: []*cli.Command{
 			{
 				Name:    "list",
