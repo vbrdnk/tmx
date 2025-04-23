@@ -44,3 +44,9 @@ func (tc *TmuxCommand) ExecuteVerbose() error {
 	}
 	return err
 }
+
+// ExecuteOutput runs the command and returns the output
+func (tc *TmuxCommand) Output() ([]byte, error) {
+	cmd := exec.Command("tmux", tc.args...)
+	return cmd.Output()
+}
