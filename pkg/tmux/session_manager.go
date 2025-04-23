@@ -2,24 +2,19 @@ package tmux
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/vbrdnk/tmx/config"
+	"github.com/vbrdnk/tmx/pkg/config"
 
 	"github.com/fatih/color"
+	"github.com/vbrdnk/tmx/internal/utils"
 )
 
 // ResolveSession creates a new session if it doesn't exist and then attaches to it
-func ResolveSession(dir string) {
-	cfg, err := config.ParseConfig()
-	if err != nil {
-		log.Printf("Error reading config file: %v", err)
-	}
-
+func ResolveSession(dir string, cfg *config.Config) {
 	// Determine session name
-	sessionName := determineSessionName(dir, cfg)
+	sessionName := utils.DetermineSessionName(dir, cfg)
 
 	// Check if session exists, create if it doesn't
 	if !sessionExists(sessionName) {
@@ -29,35 +24,31 @@ func ResolveSession(dir string) {
 	AttachToSession(sessionName)
 }
 
-func isAttached() bool {
+func tmuxRunning() bool {
 	_, tmuxRunning := os.LookupEnv("TMUX")
 	return tmuxRunning
 }
 
 // attachToSession attaches to an existing tmux session
-func AttachToSession(sessionName string) {
+func AttachToSession(sessionName string) error {
 	var tc *TmuxCommand
+	tmuxRunning := tmuxRunning()
 
-	tmuxRunning := isAttached()
 	if !tmuxRunning {
 		tc = NewTmuxCommand("attach-session", "-t", sessionName)
 	} else {
 		tc = NewTmuxCommand("switch-client", "-t", sessionName)
 	}
 
-	err := tc.ExecuteWithIO()
-	if err != nil {
-		color.Red(fmt.Sprintf("Error attaching to %s tmux session: %v\n", sessionName, err))
-	}
+	return tc.ExecuteWithIO()
 }
 
-func KillSession(sessionName string) {
-	tc := NewTmuxCommand("kill-session", "-t", sessionName)
+func KillSession(sessionName string) error {
+	return NewTmuxCommand("kill-session", "-t", sessionName).ExecuteWithIO()
+}
 
-	err := tc.ExecuteWithIO()
-	if err != nil {
-		color.Red(fmt.Sprintf("Error killing %s tmux session: %v\n", sessionName, err))
-	}
+func ListSessions() error {
+	return NewTmuxCommand("list-sessions").ExecuteWithIO()
 }
 
 // SessionExists checks if a tmux session exists
@@ -98,7 +89,7 @@ func createSessionCommands(sessionName string, dir string, cfg *config.Config) [
 	// Try to find a matching workspace
 	for _, ws := range cfg.Workspace {
 		if filepath.Base(dir) == filepath.Base(ws.Directory) {
-			sessionName = createSessionName(ws.Name)
+			sessionName = utils.CreateSessionName(ws.Name)
 
 			// Create first window with new-session
 			firstWindow := true
