@@ -27,6 +27,9 @@ cd tmx
 
 # Build and install
 go install
+
+# Install directly from the repository
+go install github.com/vbrdnk/tmx@latest
 ```
 
 This will compile the application and place the executable in your `$GOPATH/bin` directory. Make sure this directory is in your `PATH` to access the `tmx` command from anywhere.
