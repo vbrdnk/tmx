@@ -7,13 +7,21 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/vbrdnk/tmx/pkg/tmux"
 )
 
 var ErrNoSelection = errors.New("nothing selected")
 
 func FuzzyFind(input []byte) (string, error) {
+	var fzfCmd *exec.Cmd
+
 	// Then run fzf with the find output as input
-	fzfCmd := exec.Command("fzf")
+	if tmux.TmuxRunning() {
+		fzfCmd = exec.Command("fzf", "--tmux", "70%")
+	} else {
+		fzfCmd = exec.Command("fzf", "--height=70%", "--border", "--margin=1", "--padding=1")
+	}
 
 	// Create the stdin pipe for feeding data to fzf
 	fzfStdin, err := fzfCmd.StdinPipe()

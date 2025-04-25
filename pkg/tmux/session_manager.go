@@ -24,7 +24,7 @@ func ResolveSession(dir string, cfg *config.Config) {
 	AttachToSession(sessionName)
 }
 
-func tmuxRunning() bool {
+func TmuxRunning() bool {
 	_, tmuxRunning := os.LookupEnv("TMUX")
 	return tmuxRunning
 }
@@ -32,7 +32,7 @@ func tmuxRunning() bool {
 // attachToSession attaches to an existing tmux session
 func AttachToSession(sessionName string) error {
 	var tc *TmuxCommand
-	tmuxRunning := tmuxRunning()
+	tmuxRunning := TmuxRunning()
 
 	if !tmuxRunning {
 		tc = NewTmuxCommand("attach-session", "-t", sessionName)
