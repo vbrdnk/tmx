@@ -11,9 +11,12 @@ import (
 )
 
 func Run() {
-	config, err := config.ParseConfig()
-	if err != nil {
-		log.Printf("Error reading config file: %v", err)
+	config, configErrors := config.ParseConfig()
+	if len(configErrors) > 0 {
+		for _, err := range configErrors {
+			log.Printf("Configuration error: %v", err)
+		}
+		// Continue execution even if there are config errors
 	}
 
 	app := &cli.Command{
