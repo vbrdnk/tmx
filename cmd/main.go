@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/urfave/cli/v3"
-	utils "github.com/vbrdnk/tmx/internal/utils"
+	"github.com/vbrdnk/tmx/internal/path"
 	config "github.com/vbrdnk/tmx/pkg/config"
 )
 
@@ -31,7 +31,7 @@ func Run() {
 			},
 		},
 		Action: func(_ctx context.Context, cmd *cli.Command) error {
-			targetDirPath, err := utils.GetWorkingDirPath(cmd)
+			targetDirPath, err := path.GetWorkingDirPath(cmd)
 			if err != nil || targetDirPath == "" {
 				log.Fatal(err)
 			}

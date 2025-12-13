@@ -29,6 +29,30 @@ type WorkspaceConfig struct {
 	Windows   []string `toml:"windows"`
 }
 
+// GetUseZoxide safely returns the UseZoxide value, defaulting to true if nil
+func (c *Config) GetUseZoxide() bool {
+	if c.UseZoxide == nil {
+		return true
+	}
+	return *c.UseZoxide
+}
+
+// GetSearchDepth returns the search depth, with a minimum of 1
+func (c *Config) GetSearchDepth(cliDepth int) int {
+	// CLI flag takes precedence
+	if cliDepth > 0 {
+		return cliDepth
+	}
+
+	// Use config value
+	if c.SearchDepth > 0 {
+		return c.SearchDepth
+	}
+
+	// Default to 1
+	return 1
+}
+
 // ParseConfig reads and parses all configuration files
 func ParseConfig() (*Config, []ConfigError) {
 	path, err := getPath()
@@ -156,7 +180,7 @@ func ensureConfigDir(path string) error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Create directory with restrictive permissions
-			return os.MkdirAll(path, 0755)
+			return os.MkdirAll(path, 0o755)
 		}
 		return err
 	}
@@ -176,28 +200,4 @@ func getPath() (string, error) {
 	}
 
 	return filepath.Join(homeDir, ".config", "tmx"), nil
-}
-
-// GetUseZoxide safely returns the UseZoxide value, defaulting to true if nil
-func (c *Config) GetUseZoxide() bool {
-	if c.UseZoxide == nil {
-		return true
-	}
-	return *c.UseZoxide
-}
-
-// GetSearchDepth returns the search depth, with a minimum of 1
-func (c *Config) GetSearchDepth(cliDepth int) int {
-	// CLI flag takes precedence
-	if cliDepth > 0 {
-		return cliDepth
-	}
-
-	// Use config value
-	if c.SearchDepth > 0 {
-		return c.SearchDepth
-	}
-
-	// Default to 1
-	return 1
 }

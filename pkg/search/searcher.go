@@ -6,25 +6,28 @@ import (
 	"strings"
 )
 
-// GetFindResults uses fd (with fallback to find) to discover directories
-func GetFindResults(path string, depth int) ([]string, error) {
-	// Try fd first
-	if isFdAvailable() {
-		return getFdResults(path, depth)
+// DirectorySearcher handles directory discovery using various tools
+type DirectorySearcher struct {
+	fdAvailable bool
+}
+
+// NewDirectorySearcher creates a new DirectorySearcher instance
+func NewDirectorySearcher() *DirectorySearcher {
+	return &DirectorySearcher{
+		fdAvailable: isFdAvailable(),
 	}
-
-	// Fallback to find
-	return getClassicFindResults(path, depth)
 }
 
-// isFdAvailable checks if fd is installed and available in PATH
-func isFdAvailable() bool {
-	_, err := exec.LookPath("fd")
-	return err == nil
+// Search uses fd (with fallback to find) to discover directories
+func (ds *DirectorySearcher) Search(path string, depth int) ([]string, error) {
+	if ds.fdAvailable {
+		return ds.performFdSearch(path, depth)
+	}
+	return ds.performFindSearch(path, depth)
 }
 
-// GetZoxideResults queries zoxide for frecent directories under the given path
-func GetZoxideResults(path string) ([]string, error) {
+// QueryZoxideCache queries zoxide for frecent directories under the given path
+func (ds *DirectorySearcher) QueryZoxideCache(path string) ([]string, error) {
 	cmd := exec.Command("zoxide", "query", "--list")
 	output, err := cmd.Output()
 	if err != nil {
@@ -50,8 +53,8 @@ func GetZoxideResults(path string) ([]string, error) {
 	return results, nil
 }
 
-// getFdResults uses fd to find directories
-func getFdResults(path string, depth int) ([]string, error) {
+// performFdSearch uses fd to find directories
+func (ds *DirectorySearcher) performFdSearch(path string, depth int) ([]string, error) {
 	args := []string{
 		"--type", "d",
 		"--hidden",
@@ -76,8 +79,8 @@ func getFdResults(path string, depth int) ([]string, error) {
 	return parseDirectoryOutput(output), nil
 }
 
-// getClassicFindResults uses classic find command
-func getClassicFindResults(path string, depth int) ([]string, error) {
+// performFindSearch uses classic find command
+func (ds *DirectorySearcher) performFindSearch(path string, depth int) ([]string, error) {
 	args := []string{
 		path,
 		"-mindepth", "1",
@@ -98,6 +101,12 @@ func getClassicFindResults(path string, depth int) ([]string, error) {
 	}
 
 	return parseDirectoryOutput(output), nil
+}
+
+// isFdAvailable checks if fd is installed and available in PATH
+func isFdAvailable() bool {
+	_, err := exec.LookPath("fd")
+	return err == nil
 }
 
 // parseDirectoryOutput splits command output into directory paths
