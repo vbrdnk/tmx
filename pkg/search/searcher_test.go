@@ -86,7 +86,7 @@ func TestSearchWithZoxide(t *testing.T) {
 	// We're mainly testing that the method doesn't panic
 	t.Run("SearchWithZoxide", func(t *testing.T) {
 		// Use a path that's unlikely to have zoxide results
-		results, err := searcher.SearchWithZoxide("/nonexistent/path/for/testing")
+		results, err := searcher.QueryZoxideCache("/nonexistent/path/for/testing")
 
 		// It's okay if zoxide returns an error (not installed) or empty results
 		if err == nil && results != nil {

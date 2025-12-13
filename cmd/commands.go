@@ -15,7 +15,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func DefaultAction(targetDir string, config *config.Config, cliDepth int) error {
+func DefaultAction(targetDir string, config *config.Config, cliDepth int, sessionManager *session.SessionManager) error {
 	// Use DirectorySelector to find and select directory
 	selector := discovery.NewDirectorySelector(config)
 	workDir, err := selector.SelectDirectory(targetDir, cliDepth)
@@ -25,43 +25,42 @@ func DefaultAction(targetDir string, config *config.Config, cliDepth int) error 
 	}
 
 	// Use SessionManager to resolve and attach to session
-	sessionManager := session.NewSessionManager(config)
 	if err := sessionManager.ResolveSession(workDir); err != nil {
 		color.Red("Error resolving session: %v", err)
 	}
 	return nil
 }
 
-func ListSessionsAction(_ctx context.Context, _cmd *cli.Command) error {
-	if err := session.ListSessions(); err != nil {
+func ListSessionsAction(_ctx context.Context, _cmd *cli.Command, sessionManager *session.SessionManager) error {
+	if err := sessionManager.ListSessions(); err != nil {
 		color.Red("Error getting sessions list")
 	}
 
 	return nil
 }
 
-func AttachToSessionAction(_ctx context.Context, _cmd *cli.Command) error {
+func AttachToSessionAction(_ctx context.Context, _cmd *cli.Command, sessionManager *session.SessionManager) error {
 	sess, err := selectFromActiveSessions()
 	if err != nil {
 		color.Red("Error selecting active session: %v", err)
 		return nil
 	}
 
-	if err := session.AttachToSession(sess); err != nil {
+	if err := sessionManager.AttachToSession(sess); err != nil {
 		color.Red("Error connecting to %s tmux session: %v", sess, err)
 	}
 
 	return nil
 }
 
-func KillSessionAction(_ctx context.Context, _cmd *cli.Command) error {
+func KillSessionAction(_ctx context.Context, _cmd *cli.Command, sessionManager *session.SessionManager) error {
 	sess, err := selectFromActiveSessions()
 	if err != nil {
 		color.Red("Error selecting active session: %v", err)
 		return nil
 	}
 
-	if err := session.KillSession(sess); err != nil {
+	if err := sessionManager.KillSession(sess); err != nil {
 		color.Red("Error killing %s tmux session: %v", sess, err)
 	}
 
