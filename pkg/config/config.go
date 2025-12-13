@@ -17,7 +17,9 @@ type ConfigError struct {
 
 // Config represents the application configuration
 type Config struct {
-	Workspace []WorkspaceConfig `toml:"workspace"`
+	Workspace   []WorkspaceConfig `toml:"workspace"`
+	SearchDepth int               `toml:"search_depth"` // Default: 1, 0 = unlimited
+	UseZoxide   *bool             `toml:"use_zoxide"`   // Default: true, pointer to distinguish unset from false
 }
 
 // WorkspaceConfig represents a single workspace configuration
@@ -34,7 +36,20 @@ func ParseConfig() (*Config, []ConfigError) {
 		return nil, []ConfigError{{File: "path", Error: err}}
 	}
 
-	return parseConfigFile(path)
+	config, errors := parseConfigFile(path)
+	applyDefaults(config)
+	return config, errors
+}
+
+// applyDefaults sets default values for unset configuration options
+func applyDefaults(config *Config) {
+	// Default is to use zoxide if available
+	if config.UseZoxide == nil {
+		defaultUseZoxide := true
+		config.UseZoxide = &defaultUseZoxide
+	}
+	// Note: SearchDepth defaults are handled in GetSearchDepth()
+	// to allow 0 to mean "unlimited" when explicitly set in config
 }
 
 // parseConfigFile reads and parses all TOML files in the given directory
@@ -74,6 +89,15 @@ func parseConfigFile(path string) (*Config, []ConfigError) {
 			continue
 		}
 
+		// Merge global config options (last file wins for non-array fields)
+		if tempConfig.SearchDepth > 0 {
+			config.SearchDepth = tempConfig.SearchDepth
+		}
+		if tempConfig.UseZoxide != nil {
+			config.UseZoxide = tempConfig.UseZoxide
+		}
+
+		// Append workspace configurations
 		config.Workspace = append(config.Workspace, tempConfig.Workspace...)
 	}
 
@@ -152,4 +176,28 @@ func getPath() (string, error) {
 	}
 
 	return filepath.Join(homeDir, ".config", "tmx"), nil
+}
+
+// GetUseZoxide safely returns the UseZoxide value, defaulting to true if nil
+func (c *Config) GetUseZoxide() bool {
+	if c.UseZoxide == nil {
+		return true
+	}
+	return *c.UseZoxide
+}
+
+// GetSearchDepth returns the search depth, with a minimum of 1
+func (c *Config) GetSearchDepth(cliDepth int) int {
+	// CLI flag takes precedence
+	if cliDepth > 0 {
+		return cliDepth
+	}
+
+	// Use config value
+	if c.SearchDepth > 0 {
+		return c.SearchDepth
+	}
+
+	// Default to 1
+	return 1
 }

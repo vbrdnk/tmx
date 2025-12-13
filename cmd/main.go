@@ -22,13 +22,22 @@ func Run() {
 	app := &cli.Command{
 		Name:        "tmux sessionizer",
 		Description: "Tmux session manager",
+		Flags: []cli.Flag{
+			&cli.IntFlag{
+				Name:    "depth",
+				Aliases: []string{"d"},
+				Usage:   "search depth for nested directories (0 = unlimited)",
+				Value:   0, // 0 means use config default
+			},
+		},
 		Action: func(_ctx context.Context, cmd *cli.Command) error {
 			targetDirPath, err := utils.GetWorkingDirPath(cmd)
 			if err != nil || targetDirPath == "" {
 				log.Fatal(err)
 			}
 
-			return DefaultAction(targetDirPath, config)
+			depth := int(cmd.Int("depth"))
+			return DefaultAction(targetDirPath, config, depth)
 		},
 		Commands: []*cli.Command{
 			{
