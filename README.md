@@ -42,6 +42,57 @@ go install github.com/vbrdnk/tmx@latest
 
 This will compile the application and place the executable in your `$GOPATH/bin` directory. Make sure this directory is in your `PATH` to access the `tmx` command from anywhere.
 
+## Shell Completions
+
+`tmx` supports shell completions for bash, zsh, and fish. This enables tab completion for subcommands, flags, and aliases.
+
+### Bash
+
+Add to your `~/.bashrc` or `~/.bash_profile`:
+
+```bash
+# Load tmx completions
+eval "$(tmx completion bash)"
+```
+
+Or install system-wide:
+
+```bash
+tmx completion bash | sudo tee /etc/bash_completion.d/tmx
+```
+
+### Zsh
+
+Add to your `~/.zshrc`:
+
+```bash
+# Load tmx completions
+eval "$(tmx completion zsh)"
+```
+
+Or install to your fpath (requires a directory in `$fpath`):
+
+```bash
+tmx completion zsh > /usr/local/share/zsh/site-functions/_tmx
+```
+
+### Fish
+
+Add to your `~/.config/fish/config.fish`:
+
+```fish
+# Load tmx completions
+tmx completion fish | source
+```
+
+Or install to the completions directory:
+
+```bash
+tmx completion fish > ~/.config/fish/completions/tmx.fish
+```
+
+After installing completions, restart your shell or source your configuration file for the changes to take effect.
+
 ## Configuration
 
 Create a configuration file at `~/.config/tmx/tmx.toml` (or any `.toml` file in `~/.config/tmx/`) with the following structure:
