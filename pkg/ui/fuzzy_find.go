@@ -1,4 +1,4 @@
-package fzf
+package ui
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/vbrdnk/tmx/pkg/tmux"
+	"github.com/vbrdnk/tmx/pkg/session"
 )
 
 var ErrNoSelection = errors.New("nothing selected")
@@ -17,7 +17,7 @@ func FuzzyFind(input []byte) (string, error) {
 	var fzfCmd *exec.Cmd
 
 	// Then run fzf with the find output as input
-	if tmux.TmuxRunning() {
+	if session.TmuxRunning() {
 		fzfCmd = exec.Command("fzf", "--tmux", "70%")
 	} else {
 		fzfCmd = exec.Command("fzf", "--height=70%", "--border", "--margin=1", "--padding=1")
