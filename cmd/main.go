@@ -6,8 +6,9 @@ import (
 	"os"
 
 	"github.com/urfave/cli/v3"
-	utils "github.com/vbrdnk/tmx/internal/utils"
+	"github.com/vbrdnk/tmx/internal/path"
 	config "github.com/vbrdnk/tmx/pkg/config"
+	"github.com/vbrdnk/tmx/pkg/session"
 )
 
 func Run() {
@@ -19,35 +20,53 @@ func Run() {
 		// Continue execution even if there are config errors
 	}
 
+	// Create session manager instance
+	sessionManager := session.NewSessionManager(config)
+
 	app := &cli.Command{
 		Name:        "tmux sessionizer",
 		Description: "Tmux session manager",
+		Flags: []cli.Flag{
+			&cli.IntFlag{
+				Name:    "depth",
+				Aliases: []string{"d"},
+				Usage:   "search depth for nested directories (0 = unlimited)",
+				Value:   0, // 0 means use config default
+			},
+		},
 		Action: func(_ctx context.Context, cmd *cli.Command) error {
-			targetDirPath, err := utils.GetWorkingDirPath(cmd)
+			targetDirPath, err := path.GetWorkingDirPath(cmd)
 			if err != nil || targetDirPath == "" {
 				log.Fatal(err)
 			}
 
-			return DefaultAction(targetDirPath, config)
+			depth := int(cmd.Int("depth"))
+			return DefaultAction(targetDirPath, config, depth, sessionManager)
 		},
 		Commands: []*cli.Command{
 			{
 				Name:    "list",
 				Aliases: []string{"l", "ls"},
 				Usage:   "list currently active tmux sessions",
-				Action:  ListSessionsAction,
+				Action: func(_ctx context.Context, _cmd *cli.Command) error {
+					return ListSessionsAction(_ctx, _cmd, sessionManager)
+				},
 			},
 			{
 				Name:    "connect",
 				Aliases: []string{"c", "conn"},
 				Usage:   "connect to a tmux session",
-				Action:  AttachToSessionAction,
+				Action: func(_ctx context.Context, _cmd *cli.Command) error {
+					return AttachToSessionAction(_ctx, _cmd, sessionManager)
+				},
 			},
 			{
 				Name:    "kill",
 				Aliases: []string{"k"},
 				Usage:   "kill tmux session",
-				Action:  KillSessionAction,
+				Action: func(_ctx context.Context, _cmd *cli.Command) error {
+					return KillSessionAction(_ctx, _cmd, sessionManager)
+				},
 			},
 		},
 	}
