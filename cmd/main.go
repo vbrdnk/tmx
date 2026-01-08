@@ -24,8 +24,9 @@ func Run() {
 	sessionManager := session.NewSessionManager(config)
 
 	app := &cli.Command{
-		Name:        "tmux sessionizer",
-		Description: "Tmux session manager",
+		Name:                  "tmux sessionizer",
+		Description:           "Tmux session manager",
+		EnableShellCompletion: true,
 		Flags: []cli.Flag{
 			&cli.IntFlag{
 				Name:    "depth",
