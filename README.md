@@ -1,19 +1,20 @@
-# tmx - Tmux Session Manager
+# 🖥️ tmx - Tmux Session Manager
 
 `tmx` is a simple Go application that helps you manage tmux sessions. It uses fzf for interactive directory selection and creates tmux sessions with predefined windows based on your configuration.
 
-## Features
+## ✨ Features
 
-- Interactive directory selection using [fzf](https://github.com/junegunn/fzf)
-- **Nested directory search** with configurable depth
-- **Zoxide integration** for frecency-based directory suggestions
-- **Fast file discovery** using `fd` (with fallback to `find`)
-- Configure workspaces with custom names and window layouts
-- Attach to existing sessions or create new ones as needed
-- Simple and easy-to-use command-line interface
-- Accepts an optional path argument to specify search directory
+- 🔍 Interactive directory selection using [fzf](https://github.com/junegunn/fzf)
+- 📂 **Nested directory search** with configurable depth
+- ⚡ **Zoxide integration** for frecency-based directory suggestions
+- 🚀 **Fast file discovery** using `fd` (with fallback to `find`)
+- 🪟 Configure workspaces with custom names and window layouts
+- 🔗 Attach to existing sessions or create new ones as needed
+- 🎯 Simple and easy-to-use command-line interface
+- 📁 Accepts an optional path argument to specify search directory
 
-## Installation
+<details>
+<summary><h2>📦 Installation</h2></summary>
 
 ### Prerequisites
 
@@ -25,24 +26,24 @@
 - [fd](https://github.com/sharkdp/fd) - Fast alternative to `find` (automatically detected and used if available)
 - [zoxide](https://github.com/ajeetdsouza/zoxide) - Frecency-based directory jumper for smarter directory suggestions
 
-### Homebrew (macOS/Linux)
+### 🍺 Homebrew (macOS/Linux)
 
 ```bash
 brew install vbrdnk/tap/tmx
 ```
 
-> **Note (macOS):** If you encounter a Gatekeeper warning, run:
+> ⚠️ **Note (macOS):** If you encounter a Gatekeeper warning, run:
 > ```bash
 > xattr -c $(which tmx)
 > ```
 
-### Go Install
+### 🐹 Go Install
 
 ```bash
 go install github.com/vbrdnk/tmx@latest
 ```
 
-### Build from Source
+### 🔨 Build from Source
 
 ```bash
 git clone https://github.com/vbrdnk/tmx.git
@@ -50,7 +51,10 @@ cd tmx
 go install
 ```
 
-## Shell Completions
+</details>
+
+<details>
+<summary><h2>🐚 Shell Completions</h2></summary>
 
 `tmx` supports shell completions for bash, zsh, and fish. This enables tab completion for subcommands, flags, and aliases.
 
@@ -101,7 +105,10 @@ tmx completion fish > ~/.config/fish/completions/tmx.fish
 
 After installing completions, restart your shell or source your configuration file for the changes to take effect.
 
-## Configuration
+</details>
+
+<details>
+<summary><h2>⚙️ Configuration</h2></summary>
 
 Create a configuration file at `~/.config/tmx/tmx.toml` (or any `.toml` file in `~/.config/tmx/`) with the following structure:
 
@@ -124,7 +131,7 @@ windows = ["code", "build", "logs"]
 
 ### Configuration Options
 
-#### Global Settings
+#### 🌐 Global Settings
 
 - `search_depth` (optional, default: `1`): Controls how deep the directory search goes
   - `1`: Only search direct subdirectories (fastest, default)
@@ -134,13 +141,16 @@ windows = ["code", "build", "logs"]
   - When enabled, frequently/recently accessed directories appear at the top of the fzf menu (marked with ★)
   - Gracefully falls back if zoxide is not installed
 
-#### Workspace Settings
+#### 🪟 Workspace Settings
 
 - `directory`: The directory path that will trigger this workspace configuration. The app uses base path comparison to check it against the directory selected with fzf.
 - `name`: A friendly name for the tmux session
 - `windows`: A list of window names to create in the session
 
-## Usage
+</details>
+
+<details>
+<summary><h2>🚀 Usage</h2></summary>
 
 Run without arguments to search from your home directory:
 
@@ -169,29 +179,32 @@ tmx -d 1 /git
 
 The application will:
 
-1. Present an interactive fzf-based selection menu of directories
+1. 🔍 Present an interactive fzf-based selection menu of directories
    - If zoxide is enabled, frequently accessed directories appear first (marked with ★)
    - Remaining directories are listed alphabetically
-2. After you select a directory, it will check if it matches any configured workspace
-3. Create a tmux session with the configured windows if it doesn't exist
-4. Attach to the session
+2. 🔎 After you select a directory, it will check if it matches any configured workspace
+3. 🪟 Create a tmux session with the configured windows if it doesn't exist
+4. 🔗 Attach to the session
 
 If no configuration matches the selected directory, it will create a session named after the directory.
 
-### Performance Tips
+### ⚡ Performance Tips
 
 - **Default depth (1)** is fastest and works well when you organize projects in a flat structure (e.g., `~/Git/project1`, `~/Git/project2`)
 - **Moderate depth (2-3)** is suitable for nested project structures (e.g., `~/Git/org/team/project`)
 - **Unlimited depth (0)** can be slow on large directory trees - use with specific paths
 - **Zoxide integration** helps you quickly access frequently-used directories without deep searches
 
-### Subcommands
+### 📋 Subcommands
 
 - `connect` (aliases: `c`, `conn`) - Connect to an existing tmux session
 - `list` (aliases: `l`, `ls`) - List all active tmux sessions
 - `kill` (aliases: `k`) - Kill a tmux session
 
-## Example
+</details>
+
+<details>
+<summary><h2>💡 Example</h2></summary>
 
 For a configuration like:
 
@@ -215,6 +228,8 @@ windows = ["editor", "server", "lazygit"]
 - Useful when you can't remember the exact nesting level of your project
 - Zoxide helps prioritize frequently-used projects at the top of the list
 
-## License
+</details>
+
+## 📄 License
 
 MIT
