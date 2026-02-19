@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write # Required for cosign OIDC signing
+  attestations: write # Required for build attestations
 
 jobs:
   goreleaser:
@@ -22,6 +24,9 @@ jobs:
         with:
           go-version: stable
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -31,3 +36,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Generate build attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: "dist/tmx_*"

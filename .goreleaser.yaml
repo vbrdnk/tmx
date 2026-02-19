@@ -28,6 +28,20 @@ archives:
 
 checksum:
   name_template: "checksums.txt"
+  algorithm: sha256
+
+# Signing with cosign (keyless, uses GitHub Actions OIDC)
+signs:
+  - cmd: cosign
+    artifacts: checksum
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
+    args:
+      - "sign-blob"
+      - "--output-certificate=${certificate}"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+      - "--yes"
 
 changelog:
   sort: asc
