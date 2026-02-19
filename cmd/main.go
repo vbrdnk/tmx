@@ -11,6 +11,8 @@ import (
 	"github.com/vbrdnk/tmx/pkg/session"
 )
 
+var Version = "dev" // will be overridden at build time with ldflags
+
 func Run() {
 	config, configErrors := config.ParseConfig()
 	if len(configErrors) > 0 {
@@ -26,6 +28,7 @@ func Run() {
 	app := &cli.Command{
 		Name:                  "tmux sessionizer",
 		Description:           "Tmux session manager",
+		Version:               Version,
 		EnableShellCompletion: true,
 		Flags: []cli.Flag{
 			&cli.IntFlag{

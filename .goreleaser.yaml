@@ -11,6 +11,9 @@ builds:
     binary: tmx
     env:
       - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X github.com/vbrdnk/tmx/cmd.Version={{.Version}}
     goos:
       - darwin
       - linux
