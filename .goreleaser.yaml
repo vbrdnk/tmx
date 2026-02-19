@@ -63,10 +63,17 @@ homebrew_casks:
     dependencies:
       - formula: tmux
       - formula: fzf
+    hooks:
+      post:
+        install: |
+          system_command "/usr/bin/xattr", args: ["-c", "#{staged_path}/tmx"]
     caveats: |
       tmx requires tmux and fzf (installed as dependencies).
       For enhanced functionality, optionally install fd and zoxide:
         brew install fd zoxide
+
+      On macOS, if you encounter a Gatekeeper warning, run:
+        xattr -c $(which tmx)
     repository:
       owner: vbrdnk
       name: homebrew-tap

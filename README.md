@@ -18,7 +18,6 @@
 ### Prerequisites
 
 **Required:**
-- Go 1.16 or higher
 - [tmux](https://github.com/tmux/tmux/wiki) installed on your system
 - [fzf](https://github.com/junegunn/fzf) installed on your system
 
@@ -26,21 +25,30 @@
 - [fd](https://github.com/sharkdp/fd) - Fast alternative to `find` (automatically detected and used if available)
 - [zoxide](https://github.com/ajeetdsouza/zoxide) - Frecency-based directory jumper for smarter directory suggestions
 
-### Build and Install
+### Homebrew (macOS/Linux)
 
 ```bash
-# Clone the repository
-git clone https://github.com/vbrdnk/tmx.git
-cd tmx
+brew install vbrdnk/tap/tmx
+```
 
-# Build and install
-go install
+> **Note (macOS):** If you encounter a Gatekeeper warning, run:
+> ```bash
+> xattr -c $(which tmx)
+> ```
 
-# Install directly from the repository
+### Go Install
+
+```bash
 go install github.com/vbrdnk/tmx@latest
 ```
 
-This will compile the application and place the executable in your `$GOPATH/bin` directory. Make sure this directory is in your `PATH` to access the `tmx` command from anywhere.
+### Build from Source
+
+```bash
+git clone https://github.com/vbrdnk/tmx.git
+cd tmx
+go install
+```
 
 ## Shell Completions
 
