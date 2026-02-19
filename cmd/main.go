@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v3"
 	"github.com/vbrdnk/tmx/internal/path"
 	config "github.com/vbrdnk/tmx/pkg/config"
@@ -40,8 +41,8 @@ func Run() {
 		},
 		Action: func(_ctx context.Context, cmd *cli.Command) error {
 			targetDirPath, err := path.GetWorkingDirPath(cmd)
-			if err != nil || targetDirPath == "" {
-				log.Fatal(err)
+			if err != nil {
+				return err
 			}
 
 			depth := int(cmd.Int("depth"))
@@ -76,6 +77,7 @@ func Run() {
 	}
 
 	if err := app.Run(context.Background(), os.Args); err != nil {
-		log.Fatal(err)
+		color.Red("%v", err)
+		os.Exit(1)
 	}
 }

@@ -9,7 +9,13 @@ import (
 
 func GetWorkingDirPath(cmd *cli.Command) (string, error) {
 	if cmd.Args().Present() && cmd.Args().First() != "" {
-		return cmd.Args().First(), nil
+		arg := cmd.Args().First()
+		info, err := os.Stat(arg)
+		if err != nil || !info.IsDir() {
+			return "", fmt.Errorf("unknown command or invalid directory: %s", arg)
+		}
+
+		return arg, nil
 	}
 
 	// Home dir serves as a fallback if no argument is provided
