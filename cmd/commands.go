@@ -9,6 +9,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/vbrdnk/tmx/pkg/config"
 	"github.com/vbrdnk/tmx/pkg/discovery"
+	"github.com/vbrdnk/tmx/pkg/history"
 	"github.com/vbrdnk/tmx/pkg/session"
 	"github.com/vbrdnk/tmx/pkg/ui"
 
@@ -48,6 +49,34 @@ func AttachToSessionAction(_ctx context.Context, _cmd *cli.Command, sessionManag
 
 	if err := sessionManager.AttachToSession(sess); err != nil {
 		color.Red("Error connecting to %s tmux session: %v", sess, err)
+	}
+
+	return nil
+}
+
+func RecentSessionAction(_ctx context.Context, _cmd *cli.Command, cfg *config.Config, sessionManager *session.SessionManager) error {
+	maxRecent := 10
+	if cfg != nil {
+		maxRecent = cfg.GetMaxRecent()
+	}
+
+	entries := history.Load(maxRecent)
+	if len(entries) == 0 {
+		color.Yellow("No recent sessions found.")
+		return nil
+	}
+
+	selected, err := ui.FuzzyFind([]byte(strings.Join(entries, "\n")))
+	if err != nil {
+		if errors.Is(err, ui.ErrNoSelection) {
+			color.Yellow("No session selected, exiting.")
+			os.Exit(0)
+		}
+		return err
+	}
+
+	if err := sessionManager.AttachToSession(strings.TrimSpace(selected)); err != nil {
+		color.Red("Error connecting to %s tmux session: %v", selected, err)
 	}
 
 	return nil

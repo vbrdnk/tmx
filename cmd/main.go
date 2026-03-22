@@ -66,6 +66,14 @@ func Run() {
 				},
 			},
 			{
+				Name:    "recent",
+				Aliases: []string{"r"},
+				Usage:   "connect to a recent tmux session",
+				Action: func(_ctx context.Context, _cmd *cli.Command) error {
+					return RecentSessionAction(_ctx, _cmd, config, sessionManager)
+				},
+			},
+			{
 				Name:    "kill",
 				Aliases: []string{"k"},
 				Usage:   "kill tmux session",

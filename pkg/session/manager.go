@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/vbrdnk/tmx/pkg/config"
+	"github.com/vbrdnk/tmx/pkg/history"
 )
 
 // SessionManager handles tmux session lifecycle operations
@@ -50,7 +51,17 @@ func (sm *SessionManager) AttachToSession(sessionName string) error {
 		tc = NewTmuxCommand("switch-client", "-t", sessionName)
 	}
 
-	return tc.ExecuteWithIO()
+	if err := tc.ExecuteWithIO(); err != nil {
+		return err
+	}
+
+	maxRecent := 10
+	if sm.config != nil {
+		maxRecent = sm.config.GetMaxRecent()
+	}
+	history.Record(sessionName, maxRecent)
+
+	return nil
 }
 
 // KillSession terminates a tmux session

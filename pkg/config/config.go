@@ -20,6 +20,7 @@ type Config struct {
 	Workspace   []WorkspaceConfig `toml:"workspace"`
 	SearchDepth int               `toml:"search_depth"` // Default: 1, 0 = unlimited
 	UseZoxide   *bool             `toml:"use_zoxide"`   // Default: true, pointer to distinguish unset from false
+	MaxRecent   *int              `toml:"max_recent"`   // Default: 10, pointer to distinguish unset from explicit 0
 }
 
 // WorkspaceConfig represents a single workspace configuration
@@ -35,6 +36,14 @@ func (c *Config) GetUseZoxide() bool {
 		return true
 	}
 	return *c.UseZoxide
+}
+
+// GetMaxRecent safely returns the MaxRecent value, defaulting to 10 if nil
+func (c *Config) GetMaxRecent() int {
+	if c.MaxRecent == nil {
+		return 10
+	}
+	return *c.MaxRecent
 }
 
 // GetSearchDepth returns the search depth, with a minimum of 1
@@ -74,6 +83,10 @@ func applyDefaults(config *Config) {
 	}
 	// Note: SearchDepth defaults are handled in GetSearchDepth()
 	// to allow 0 to mean "unlimited" when explicitly set in config
+	if config.MaxRecent == nil {
+		defaultMaxRecent := 10
+		config.MaxRecent = &defaultMaxRecent
+	}
 }
 
 // parseConfigFile reads and parses all TOML files in the given directory
@@ -119,6 +132,9 @@ func parseConfigFile(path string) (*Config, []ConfigError) {
 		}
 		if tempConfig.UseZoxide != nil {
 			config.UseZoxide = tempConfig.UseZoxide
+		}
+		if tempConfig.MaxRecent != nil {
+			config.MaxRecent = tempConfig.MaxRecent
 		}
 
 		// Append workspace configurations

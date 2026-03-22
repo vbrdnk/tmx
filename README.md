@@ -10,6 +10,7 @@
 - 🚀 **Fast file discovery** using `fd` (with fallback to `find`)
 - 🪟 Configure workspaces with custom names and window layouts
 - 🔗 Attach to existing sessions or create new ones as needed
+- 🕓 **Recent session history** for quick reattachment to previously used sessions
 - 🎯 Simple and easy-to-use command-line interface
 - 📁 Accepts an optional path argument to specify search directory
 
@@ -140,6 +141,9 @@ windows = ["code", "build", "logs"]
 - `use_zoxide` (optional, default: `true`): Enable integration with [zoxide](https://github.com/ajeetdsouza/zoxide) for frecency-based directory suggestions
   - When enabled, frequently/recently accessed directories appear at the top of the fzf menu (marked with ★)
   - Gracefully falls back if zoxide is not installed
+- `max_recent` (optional, default: `10`): Number of recent sessions to track in history
+  - Sessions are recorded on every attach and deduplicated (most-recently-used order)
+  - History is stored at `~/.local/share/tmx/history`
 
 #### 🪟 Workspace Settings
 
@@ -197,7 +201,8 @@ If no configuration matches the selected directory, it will create a session nam
 
 ### 📋 Subcommands
 
-- `connect` (aliases: `c`, `conn`) - Connect to an existing tmux session
+- `recent` (aliases: `r`) - Connect to a recently used tmux session
+- `connect` (aliases: `c`, `conn`) - Connect to an existing active tmux session
 - `list` (aliases: `l`, `ls`) - List all active tmux sessions
 - `kill` (aliases: `k`) - Kill a tmux session
 
