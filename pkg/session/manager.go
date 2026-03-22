@@ -37,13 +37,15 @@ func (sm *SessionManager) ResolveSession(dir string) error {
 	return sm.AttachToSession(sessionName)
 }
 
-// AttachToSession attaches to an existing tmux session
+// AttachToSession attaches to an existing tmux session. When called from outside tmux,
+// detaches any other clients before attaching.
 func (sm *SessionManager) AttachToSession(sessionName string) error {
 	var tc *TmuxCommand
 	tmuxRunning := TmuxRunning()
 
 	if !tmuxRunning {
-		tc = NewTmuxCommand("attach-session", "-t", sessionName)
+		// -d detaches all other clients from all sessions before attaching
+		tc = NewTmuxCommand("attach-session", "-d", "-t", sessionName)
 	} else {
 		tc = NewTmuxCommand("switch-client", "-t", sessionName)
 	}
