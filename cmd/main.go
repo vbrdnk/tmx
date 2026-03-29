@@ -58,11 +58,12 @@ func Run() {
 				},
 			},
 			{
-				Name:    "connect",
-				Aliases: []string{"c", "conn"},
-				Usage:   "connect to a tmux session",
-				Action: func(_ctx context.Context, _cmd *cli.Command) error {
-					return AttachToSessionAction(_ctx, _cmd, sessionManager)
+				Name:      "connect",
+				Aliases:   []string{"c", "conn"},
+				Usage:     "connect to a tmux session",
+				ArgsUsage: "[session]",
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return AttachToSessionAction(ctx, cmd, sessionManager)
 				},
 			},
 			{
@@ -74,11 +75,12 @@ func Run() {
 				},
 			},
 			{
-				Name:    "kill",
-				Aliases: []string{"k"},
-				Usage:   "kill tmux session",
-				Action: func(_ctx context.Context, _cmd *cli.Command) error {
-					return KillSessionAction(_ctx, _cmd, sessionManager)
+				Name:      "kill",
+				Aliases:   []string{"k"},
+				Usage:     "kill tmux session",
+				ArgsUsage: "[session]",
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return KillSessionAction(ctx, cmd, sessionManager)
 				},
 			},
 		},

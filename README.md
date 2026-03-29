@@ -202,9 +202,59 @@ If no configuration matches the selected directory, it will create a session nam
 ### 📋 Subcommands
 
 - `recent` (aliases: `r`) - Connect to a recently used tmux session
-- `connect` (aliases: `c`, `conn`) - Connect to an existing active tmux session
+- `connect` (aliases: `c`, `conn`) - Connect to an existing active tmux session (accepts optional session name)
 - `list` (aliases: `l`, `ls`) - List all active tmux sessions
-- `kill` (aliases: `k`) - Kill a tmux session
+- `kill` (aliases: `k`) - Kill a tmux session (accepts optional session name)
+
+When a session name is passed directly, the interactive picker is skipped:
+
+```bash
+tmx connect my-session
+tmx kill my-session
+```
+
+</details>
+
+<details>
+<summary><h2>📺 Television Integration</h2></summary>
+
+[Television](https://github.com/alexpasmantier/television) is a fast, extensible fuzzy finder. You can use it as an alternative picker for `tmx` by creating a custom cable channel.
+
+Create `~/.config/television/cable/tmx.toml`:
+
+```toml
+[metadata]
+name = "tmx"
+description = "Session manager integrating tmux sessions, zoxide directories, and config paths"
+requirements = ["tmx"]
+
+[source]
+command = ["tmx list"]
+
+ansi = true
+output = "{strip_ansi|split: :0}"
+
+[preview]
+command = "tmux capture-pane -t '{strip_ansi|split: :0}' -ep 2>/dev/null || echo 'No preview available'"
+
+[keybindings]
+enter = "actions:connect"
+ctrl-d = ["actions:kill_session", "reload_source"]
+
+[actions.connect]
+description = "Connect to selected session"
+command = "tmx connect '{strip_ansi|split: :0}'"
+mode = "execute"
+
+[actions.kill_session]
+description = "Kill selected tmx session"
+command = "tmx kill '{strip_ansi|split: :0}'"
+mode = "fork"
+```
+
+Then run `tv tmx` to browse and connect to your tmux sessions from Television.
+
+The `{strip_ansi|split: :0}` template strips color codes from `tmx list` output and extracts just the session name (the part before the first `:`).
 
 </details>
 
