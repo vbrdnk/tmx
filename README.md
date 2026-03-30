@@ -122,12 +122,20 @@ use_zoxide = true       # Use zoxide for frecency-based directory suggestions
 [[workspace]]
 directory = "/path/to/your/project"
 name = "project-name"
-windows = ["editor", "server", "terminal"]
+windows = [
+  {name = "editor", command = "nvim"},
+  {name = "server"},
+  {name = "terminal"},
+]
 
 [[workspace]]
 directory = "/another/project"
 name = "another-project"
-windows = ["code", "build", "logs"]
+windows = [
+  {name = "code"},
+  {name = "build"},
+  {name = "logs"},
+]
 ```
 
 ### Configuration Options
@@ -149,7 +157,9 @@ windows = ["code", "build", "logs"]
 
 - `directory`: The directory path that will trigger this workspace configuration. The app uses base path comparison to check it against the directory selected with fzf.
 - `name`: A friendly name for the tmux session
-- `windows`: A list of window names to create in the session
+- `windows`: A list of window objects to create in the session. Each window has:
+  - `name` (required): The window name
+  - `command` (optional): A command to run when the window is created
 
 </details>
 
@@ -270,13 +280,17 @@ use_zoxide = true
 [[workspace]]
 directory = "/git/example"
 name = "example session"
-windows = ["editor", "server", "lazygit"]
+windows = [
+  {name = "editor", command = "nvim"},
+  {name = "server"},
+  {name = "lazygit", command = "lg"},
+]
 ```
 
 **Scenario 1:** You run `tmx` from your home directory:
 - The tool searches 2 levels deep for directories
 - Zoxide-tracked directories appear first with a ★ marker
-- When you select `/git/example`, it creates a session named `example_session` with three windows: `editor`, `server`, and `lazygit`
+- When you select `/git/example`, it creates a session named `example_session` with three windows: `editor` (opens nvim), `server`, and `lazygit` (opens lg)
 
 **Scenario 2:** You run `tmx --depth 0 ~/Projects`:
 - The tool searches unlimited depth under `~/Projects`

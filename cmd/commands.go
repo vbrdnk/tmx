@@ -40,18 +40,18 @@ func ListSessionsAction(_ctx context.Context, _cmd *cli.Command, sessionManager 
 	return nil
 }
 
-func AttachToSessionAction(_ctx context.Context, cmd *cli.Command, sessionManager *session.SessionManager) error {
-	var sess string
-
+func resolveSession(cmd *cli.Command) (string, error) {
 	if arg := cmd.Args().First(); arg != "" {
-		sess = arg
-	} else {
-		var err error
-		sess, err = selectFromActiveSessions()
-		if err != nil {
-			color.Red("Error selecting active session: %v", err)
-			return nil
-		}
+		return arg, nil
+	}
+	return selectFromActiveSessions()
+}
+
+func AttachToSessionAction(_ctx context.Context, cmd *cli.Command, sessionManager *session.SessionManager) error {
+	sess, err := resolveSession(cmd)
+	if err != nil {
+		color.Red("Error selecting active session: %v", err)
+		return nil
 	}
 
 	if err := sessionManager.AttachToSession(sess); err != nil {
@@ -90,17 +90,10 @@ func RecentSessionAction(_ctx context.Context, _cmd *cli.Command, cfg *config.Co
 }
 
 func KillSessionAction(_ctx context.Context, cmd *cli.Command, sessionManager *session.SessionManager) error {
-	var sess string
-
-	if arg := cmd.Args().First(); arg != "" {
-		sess = arg
-	} else {
-		var err error
-		sess, err = selectFromActiveSessions()
-		if err != nil {
-			color.Red("Error selecting active session: %v", err)
-			return nil
-		}
+	sess, err := resolveSession(cmd)
+	if err != nil {
+		color.Red("Error selecting active session: %v", err)
+		return nil
 	}
 
 	if err := sessionManager.KillSession(sess); err != nil {

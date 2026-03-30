@@ -23,11 +23,17 @@ type Config struct {
 	MaxRecent   *int              `toml:"max_recent"`   // Default: 10, pointer to distinguish unset from explicit 0
 }
 
+// WindowConfig represents a single window configuration
+type WindowConfig struct {
+	Name    string `toml:"name"`
+	Command string `toml:"command"`
+}
+
 // WorkspaceConfig represents a single workspace configuration
 type WorkspaceConfig struct {
-	Directory string   `toml:"directory"`
-	Name      string   `toml:"name"`
-	Windows   []string `toml:"windows"`
+	Directory string         `toml:"directory"`
+	Name      string         `toml:"name"`
+	Windows   []WindowConfig `toml:"windows"`
 }
 
 // GetUseZoxide safely returns the UseZoxide value, defaulting to true if nil
@@ -185,6 +191,12 @@ func validateWorkspaceConfig(ws WorkspaceConfig) error {
 
 	if ws.Directory == "" {
 		return fmt.Errorf("workspace directory cannot be empty")
+	}
+
+	for i, w := range ws.Windows {
+		if w.Name == "" {
+			return fmt.Errorf("window at index %d in workspace %q has an empty name", i, ws.Name)
+		}
 	}
 
 	return nil

@@ -121,10 +121,15 @@ func (sm *SessionManager) buildSessionCommands(sessionName string, dir string) [
 			firstWindow := true
 			for _, window := range ws.Windows {
 				if firstWindow {
-					commands = append(commands, NewTmuxCommand("new-session", "-ds", sessionName, "-c", dir, "-n", window))
+					commands = append(commands, NewTmuxCommand("new-session", "-ds", sessionName, "-c", dir, "-n", window.Name))
 					firstWindow = false
 				} else {
-					commands = append(commands, NewTmuxCommand("neww", "-t", sessionName, "-c", dir, "-n", window))
+					commands = append(commands, NewTmuxCommand("neww", "-t", sessionName, "-c", dir, "-n", window.Name))
+				}
+				if window.Command != "" {
+					// Wait for the shell to be ready before sending keys
+					commands = append(commands, NewTmuxCommand("run-shell", "sleep 0.1"))
+					commands = append(commands, NewTmuxCommand("send-keys", "-t", sessionName+":"+window.Name, window.Command, "Enter"))
 				}
 			}
 			return commands

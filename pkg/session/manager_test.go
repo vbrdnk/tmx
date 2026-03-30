@@ -102,7 +102,7 @@ func TestDetermineSessionName(t *testing.T) {
 				{
 					Directory: "/path/to/myproject",
 					Name:      "Custom Project Name",
-					Windows:   []string{"editor", "server"},
+					Windows:   []config.WindowConfig{{Name: "editor"}, {Name: "server"}},
 				},
 			},
 		}
@@ -122,7 +122,7 @@ func TestDetermineSessionName(t *testing.T) {
 				{
 					Directory: "/path/to/otherproject",
 					Name:      "Other Project",
-					Windows:   []string{"editor"},
+					Windows:   []config.WindowConfig{{Name: "editor"}},
 				},
 			},
 		}
@@ -176,7 +176,7 @@ func TestBuildSessionCommands(t *testing.T) {
 				{
 					Directory: "/path/to/project",
 					Name:      "My Project",
-					Windows:   []string{"editor", "server", "logs"},
+					Windows:   []config.WindowConfig{{Name: "editor"}, {Name: "server"}, {Name: "logs"}},
 				},
 			},
 		}
@@ -203,6 +203,35 @@ func TestBuildSessionCommands(t *testing.T) {
 					t.Errorf("Expected command %d to be neww, got %s", i, commands[i].args[0])
 				}
 			}
+		}
+	})
+
+	t.Run("WithWindowCommand", func(t *testing.T) {
+		cfg := &config.Config{
+			Workspace: []config.WorkspaceConfig{
+				{
+					Directory: "/path/to/project",
+					Name:      "My Project",
+					Windows: []config.WindowConfig{
+						{Name: "editor"},
+						{Name: "git", Command: "git pull"},
+					},
+				},
+			},
+		}
+		sm := NewSessionManager(cfg)
+
+		commands := sm.buildSessionCommands("testsession", "/path/to/project")
+
+		// 2 windows + 1 run-shell (sleep) + 1 send-keys for the git window = 4 commands
+		if len(commands) != 4 {
+			t.Errorf("Expected 4 commands, got %d", len(commands))
+		}
+
+		// Last command should be send-keys for the git window command
+		last := commands[len(commands)-1]
+		if last.args[0] != "send-keys" {
+			t.Errorf("Expected last command to be send-keys, got %s", last.args[0])
 		}
 	})
 }

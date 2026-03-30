@@ -14,7 +14,7 @@ func TestParseConfigAt(t *testing.T) {
 		[[workspace]]
 		directory = "/tmp"
 		name = "test"
-		windows = ["a", "b"]
+		windows = [{name = "a"}, {name = "b"}]
 	`
 
 	if err := os.WriteFile(tmpFile, []byte(tomlData), 0644); err != nil {
@@ -43,8 +43,8 @@ func TestParseConfigAt(t *testing.T) {
 		t.Errorf("expected %d windows, got %d", len(expectedWindows), len(ws.Windows))
 	}
 	for i, win := range expectedWindows {
-		if ws.Windows[i] != win {
-			t.Errorf("expected window %d to be '%s', got '%s'", i, win, ws.Windows[i])
+		if ws.Windows[i].Name != win {
+			t.Errorf("expected window %d to be '%s', got '%s'", i, win, ws.Windows[i].Name)
 		}
 	}
 }
@@ -157,6 +157,64 @@ func TestGetUseZoxide(t *testing.T) {
 	}
 }
 
+func TestParseConfigWindowFormats(t *testing.T) {
+	t.Run("WindowWithoutCommand", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		tmpFile := filepath.Join(tmpDir, "tmx.toml")
+		tomlData := `
+			[[workspace]]
+			directory = "/tmp"
+			name = "test"
+			windows = [{name = "editor"}, {name = "server"}]
+		`
+		if err := os.WriteFile(tmpFile, []byte(tomlData), 0644); err != nil {
+			t.Fatal(err)
+		}
+		cfg, errors := parseConfigFile(tmpDir)
+		if len(errors) > 0 {
+			t.Fatalf("expected no errors, got: %v", errors)
+		}
+		ws := cfg.Workspace[0]
+		if len(ws.Windows) != 2 {
+			t.Fatalf("expected 2 windows, got %d", len(ws.Windows))
+		}
+		if ws.Windows[0].Name != "editor" || ws.Windows[0].Command != "" {
+			t.Errorf("unexpected window[0]: %+v", ws.Windows[0])
+		}
+		if ws.Windows[1].Name != "server" || ws.Windows[1].Command != "" {
+			t.Errorf("unexpected window[1]: %+v", ws.Windows[1])
+		}
+	})
+
+	t.Run("WindowWithCommand", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		tmpFile := filepath.Join(tmpDir, "tmx.toml")
+		tomlData := `
+			[[workspace]]
+			directory = "/tmp"
+			name = "test"
+			windows = [{name = "editor"}, {name = "git", command = "git pull"}]
+		`
+		if err := os.WriteFile(tmpFile, []byte(tomlData), 0644); err != nil {
+			t.Fatal(err)
+		}
+		cfg, errors := parseConfigFile(tmpDir)
+		if len(errors) > 0 {
+			t.Fatalf("expected no errors, got: %v", errors)
+		}
+		ws := cfg.Workspace[0]
+		if len(ws.Windows) != 2 {
+			t.Fatalf("expected 2 windows, got %d", len(ws.Windows))
+		}
+		if ws.Windows[0].Name != "editor" || ws.Windows[0].Command != "" {
+			t.Errorf("unexpected window[0]: %+v", ws.Windows[0])
+		}
+		if ws.Windows[1].Name != "git" || ws.Windows[1].Command != "git pull" {
+			t.Errorf("unexpected window[1]: %+v", ws.Windows[1])
+		}
+	})
+}
+
 func TestParseConfigWithSearchOptions(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "tmx.toml")
@@ -166,7 +224,7 @@ use_zoxide = false
 [[workspace]]
 directory = "/tmp"
 name = "test"
-windows = ["a", "b"]
+windows = [{name = "a"}, {name = "b"}]
 `
 
 	if err := os.WriteFile(tmpFile, []byte(tomlData), 0644); err != nil {
