@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/vbrdnk/tmx/pkg/config"
+	gitpkg "github.com/vbrdnk/tmx/pkg/git"
 	"github.com/vbrdnk/tmx/pkg/history"
 )
 
@@ -108,54 +109,69 @@ func (sm *SessionManager) createSession(sessionName string, dir string) error {
 	return nil
 }
 
-// buildSessionCommands generates commands for creating a session based on config
-func (sm *SessionManager) buildSessionCommands(sessionName string, dir string) []*TmuxCommand {
-	var commands []*TmuxCommand
+// findMatchingWorkspace returns the workspace config that matches the given directory,
+// falling back to worktree detection if no direct match is found.
+func (sm *SessionManager) findMatchingWorkspace(dir string) *config.WorkspaceConfig {
+	if sm.config == nil {
+		return nil
+	}
 
-	// Try to find a matching workspace
-	for _, ws := range sm.config.Workspace {
+	for i, ws := range sm.config.Workspace {
 		if filepath.Base(dir) == filepath.Base(ws.Directory) {
-			sessionName = sm.createSessionName(ws.Name)
-
-			// Create first window with new-session
-			firstWindow := true
-			for _, window := range ws.Windows {
-				if firstWindow {
-					commands = append(commands, NewTmuxCommand("new-session", "-ds", sessionName, "-c", dir, "-n", window.Name))
-					firstWindow = false
-				} else {
-					commands = append(commands, NewTmuxCommand("neww", "-t", sessionName, "-c", dir, "-n", window.Name))
-				}
-				if window.Command != "" {
-					// Wait for the shell to be ready before sending keys
-					commands = append(commands, NewTmuxCommand("run-shell", "sleep 0.1"))
-					commands = append(commands, NewTmuxCommand("send-keys", "-t", sessionName+":"+window.Name, window.Command, "Enter"))
-				}
-			}
-			return commands
+			return &sm.config.Workspace[i]
 		}
 	}
 
-	// No matching workspace found, create a default session
-	color.Yellow("No matching workspace found. Creating default session...\n")
-	return []*TmuxCommand{NewTmuxCommand("new-session", "-ds", sessionName, "-c", dir)}
+	if gitpkg.IsWorktree(dir) {
+		mainPath, err := gitpkg.MainRepoPath(dir)
+		if err != nil {
+			return nil
+		}
+		for i, ws := range sm.config.Workspace {
+			if filepath.Base(mainPath) == filepath.Base(ws.Directory) {
+				return &sm.config.Workspace[i]
+			}
+		}
+	}
+
+	return nil
+}
+
+// buildSessionCommands generates commands for creating a session based on config
+func (sm *SessionManager) buildSessionCommands(sessionName string, dir string) []*TmuxCommand {
+	ws := sm.findMatchingWorkspace(dir)
+	if ws == nil {
+		color.Yellow("No matching workspace found. Creating default session...\n")
+		return []*TmuxCommand{NewTmuxCommand("new-session", "-ds", sessionName, "-c", dir)}
+	}
+
+	var commands []*TmuxCommand
+	firstWindow := true
+	for _, window := range ws.Windows {
+		if firstWindow {
+			commands = append(commands, NewTmuxCommand("new-session", "-ds", sessionName, "-c", dir, "-n", window.Name))
+			firstWindow = false
+		} else {
+			commands = append(commands, NewTmuxCommand("neww", "-t", sessionName, "-c", dir, "-n", window.Name))
+		}
+		if window.Command != "" {
+			commands = append(commands, NewTmuxCommand("run-shell", "sleep 0.1"))
+			commands = append(commands, NewTmuxCommand("send-keys", "-t", sessionName+":"+window.Name, window.Command, "Enter"))
+		}
+	}
+	return commands
 }
 
 // determineSessionName tries to find a matching workspace in config or falls back to dir basename
 func (sm *SessionManager) determineSessionName(dir string) string {
-	// If no config, use directory name
-	if sm.config == nil {
+	ws := sm.findMatchingWorkspace(dir)
+	if ws == nil {
 		return sm.createSessionName(filepath.Base(dir))
 	}
 
-	// Try to find a matching workspace
-	for _, ws := range sm.config.Workspace {
-		if filepath.Base(dir) == filepath.Base(ws.Directory) {
-			return sm.createSessionName(ws.Name)
-		}
+	if filepath.Base(dir) == filepath.Base(ws.Directory) {
+		return sm.createSessionName(ws.Name)
 	}
-
-	// Default to directory name if no match found
 	return sm.createSessionName(filepath.Base(dir))
 }
 

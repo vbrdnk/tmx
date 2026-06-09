@@ -1,6 +1,9 @@
 package session
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/vbrdnk/tmx/pkg/config"
@@ -243,4 +246,238 @@ func TestTmuxRunning(t *testing.T) {
 
 	// Result should be a boolean
 	_ = result
+}
+
+func initGitRepo(t *testing.T, dir string) {
+	t.Helper()
+	cmds := [][]string{
+		{"git", "init"},
+		{"git", "config", "user.email", "test@test.com"},
+		{"git", "config", "user.name", "Test"},
+		{"git", "commit", "--allow-empty", "-m", "init"},
+	}
+	for _, args := range cmds {
+		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Dir = dir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git command %v failed: %s\n%s", args, err, out)
+		}
+	}
+}
+
+func createWorktree(t *testing.T, mainDir, wtDir, branch string) {
+	t.Helper()
+	cmd := exec.Command("git", "worktree", "add", wtDir, "-b", branch)
+	cmd.Dir = mainDir
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("git worktree add failed: %s\n%s", err, out)
+	}
+}
+
+func TestFindMatchingWorkspace(t *testing.T) {
+	t.Run("ExactMatch", func(t *testing.T) {
+		cfg := &config.Config{
+			Workspace: []config.WorkspaceConfig{
+				{
+					Directory: "/git/client-web",
+					Name:      "client-web",
+					Windows:   []config.WindowConfig{{Name: "editor"}, {Name: "server"}},
+				},
+			},
+		}
+		sm := NewSessionManager(cfg)
+		ws := sm.findMatchingWorkspace("/git/client-web")
+		if ws == nil {
+			t.Fatal("expected workspace match")
+		}
+		if ws.Name != "client-web" {
+			t.Errorf("expected name 'client-web', got %q", ws.Name)
+		}
+	})
+
+	t.Run("NoMatch", func(t *testing.T) {
+		cfg := &config.Config{
+			Workspace: []config.WorkspaceConfig{
+				{
+					Directory: "/git/client-web",
+					Name:      "client-web",
+					Windows:   []config.WindowConfig{{Name: "editor"}},
+				},
+			},
+		}
+		sm := NewSessionManager(cfg)
+		ws := sm.findMatchingWorkspace("/git/random-project")
+		if ws != nil {
+			t.Error("expected no match")
+		}
+	})
+
+	t.Run("WorktreeFallback", func(t *testing.T) {
+		mainDir := filepath.Join(t.TempDir(), "client-web")
+		if err := os.Mkdir(mainDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		initGitRepo(t, mainDir)
+
+		wtDir := filepath.Join(t.TempDir(), "client-web-my-feature")
+		createWorktree(t, mainDir, wtDir, "my-feature")
+
+		cfg := &config.Config{
+			Workspace: []config.WorkspaceConfig{
+				{
+					Directory: mainDir,
+					Name:      "client-web",
+					Windows:   []config.WindowConfig{{Name: "editor"}, {Name: "server"}},
+				},
+			},
+		}
+		sm := NewSessionManager(cfg)
+		ws := sm.findMatchingWorkspace(wtDir)
+		if ws == nil {
+			t.Fatal("expected workspace match via worktree fallback")
+		}
+		if ws.Name != "client-web" {
+			t.Errorf("expected name 'client-web', got %q", ws.Name)
+		}
+	})
+
+	t.Run("WorktreeNoConfigMatch", func(t *testing.T) {
+		mainDir := filepath.Join(t.TempDir(), "unconfigured-repo")
+		if err := os.Mkdir(mainDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		initGitRepo(t, mainDir)
+
+		wtDir := filepath.Join(t.TempDir(), "unconfigured-repo-feature")
+		createWorktree(t, mainDir, wtDir, "feature")
+
+		cfg := &config.Config{
+			Workspace: []config.WorkspaceConfig{
+				{
+					Directory: "/git/client-web",
+					Name:      "client-web",
+					Windows:   []config.WindowConfig{{Name: "editor"}},
+				},
+			},
+		}
+		sm := NewSessionManager(cfg)
+		ws := sm.findMatchingWorkspace(wtDir)
+		if ws != nil {
+			t.Error("expected no match even with worktree fallback")
+		}
+	})
+
+	t.Run("NotAWorktree", func(t *testing.T) {
+		cfg := &config.Config{
+			Workspace: []config.WorkspaceConfig{
+				{
+					Directory: "/git/client-web",
+					Name:      "client-web",
+					Windows:   []config.WindowConfig{{Name: "editor"}},
+				},
+			},
+		}
+		sm := NewSessionManager(cfg)
+		ws := sm.findMatchingWorkspace("/git/client-web-my-feature")
+		if ws != nil {
+			t.Error("expected no match when not a worktree")
+		}
+	})
+
+	t.Run("NilConfig", func(t *testing.T) {
+		sm := NewSessionManager(nil)
+		ws := sm.findMatchingWorkspace("/git/anything")
+		if ws != nil {
+			t.Error("expected nil with nil config")
+		}
+	})
+}
+
+func TestDetermineSessionNameWithWorktree(t *testing.T) {
+	mainDir := filepath.Join(t.TempDir(), "client-web")
+	if err := os.Mkdir(mainDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	initGitRepo(t, mainDir)
+
+	wtDir := filepath.Join(t.TempDir(), "client-web-my-feature")
+	createWorktree(t, mainDir, wtDir, "my-feature")
+
+	cfg := &config.Config{
+		Workspace: []config.WorkspaceConfig{
+			{
+				Directory: mainDir,
+				Name:      "client-web",
+				Windows:   []config.WindowConfig{{Name: "editor"}},
+			},
+		},
+	}
+
+	t.Run("WorktreeUsesDirectoryName", func(t *testing.T) {
+		sm := NewSessionManager(cfg)
+		result := sm.determineSessionName(wtDir)
+		expected := "client-web-my-feature"
+		if result != expected {
+			t.Errorf("determineSessionName() = %q, want %q", result, expected)
+		}
+	})
+
+	t.Run("DirectMatchUsesWorkspaceName", func(t *testing.T) {
+		sm := NewSessionManager(cfg)
+		result := sm.determineSessionName(mainDir)
+		expected := "client-web"
+		if result != expected {
+			t.Errorf("determineSessionName() = %q, want %q", result, expected)
+		}
+	})
+}
+
+func TestBuildSessionCommandsWithWorktree(t *testing.T) {
+	mainDir := filepath.Join(t.TempDir(), "client-web")
+	if err := os.Mkdir(mainDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	initGitRepo(t, mainDir)
+
+	wtDir := filepath.Join(t.TempDir(), "client-web-my-feature")
+	createWorktree(t, mainDir, wtDir, "my-feature")
+
+	cfg := &config.Config{
+		Workspace: []config.WorkspaceConfig{
+			{
+				Directory: mainDir,
+				Name:      "client-web",
+				Windows: []config.WindowConfig{
+					{Name: "editor", Command: "nvim"},
+					{Name: "server"},
+				},
+			},
+		},
+	}
+
+	t.Run("WorktreeInheritsFullConfig", func(t *testing.T) {
+		sm := NewSessionManager(cfg)
+		commands := sm.buildSessionCommands("client-web-my-feature", wtDir)
+
+		// 2 windows + 1 run-shell (sleep) + 1 send-keys for nvim = 4 commands
+		if len(commands) != 4 {
+			t.Errorf("expected 4 commands, got %d", len(commands))
+		}
+
+		if len(commands) > 0 && commands[0].args[0] != "new-session" {
+			t.Error("expected first command to be new-session")
+		}
+
+		// Verify session is created in worktree directory, not main repo
+		found := false
+		for _, arg := range commands[0].args {
+			if arg == wtDir {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("expected session directory to be the worktree path, got args: %v", commands[0].args)
+		}
+	})
 }
