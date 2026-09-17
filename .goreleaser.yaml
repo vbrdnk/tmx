@@ -65,7 +65,7 @@ homebrew_casks:
       - formula: fzf
     hooks:
       post:
-        install: |
+        install_steps: |
           system_command "/usr/bin/xattr", args: ["-c", "#{staged_path}/tmx"]
     caveats: |
       tmx requires tmux and fzf (installed as dependencies).
